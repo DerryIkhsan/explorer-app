@@ -3,14 +3,25 @@
     import api from '../api';
 
     const folders = ref([]);
+    const files  = ref([]);
 
     const fetchDataFolders = async () => {
 
         //fetch data 
         await api.get('/api/folders')
-
         .then(response => {
             folders.value = response.data.data
+        });
+    }
+
+    const fetchDataFiles = async(id) => {
+        await api.get('/api/files', {
+            params: {
+                folder_id: id
+            }
+        })
+        .then(response => {
+            files.value = response.data.data
         });
     }
 
@@ -40,7 +51,7 @@
                         </span>
 
                         <span v-else v-for="(folder, index) in folders" :key="index">
-                            <li class="nav-item">
+                            <li class="nav-item" @click="fetchDataFiles(folder.id)" >
                                 <a href="#" class="nav-link align-middle px-0">
                                     <font-awesome-icon icon="folder-open" /> 
                                     <span class="ms-1 d-none d-sm-inline">{{ folder.folder }}</span>
@@ -52,8 +63,21 @@
                 </div>
             </div>
 
-            <div class="col py-3">
-                Content area...
+            <div class="row">
+                <div class="py-3 card-group">
+                    <!-- Files List -->
+                    <span v-if="files.length == 0">
+                        <h3>Tidak ada file</h3>
+                    </span>
+                    <span v-else v-for="(file, index) in files" :key="index" >
+                        <span class="card m-2" style="width: 200px; height: 200px;">
+                            <img class="card-img-top" :src="file.file_hash" alt="Image">
+                            <div class="card-body bg-secondary">
+                                <p class="card-text text-white" style="font-size: 12px;">{{ file.file }}</p>
+                            </div>
+                        </span>
+                    </span>
+                </div>
             </div>
         </div>
     </div>
