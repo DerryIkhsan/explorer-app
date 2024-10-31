@@ -4,6 +4,7 @@
 
     const folders = ref([]);
     const files  = ref([]);
+    const currentFolder = ref('');
 
     const fetchDataFolders = async () => {
 
@@ -23,6 +24,12 @@
         .then(response => {
             files.value = response.data.data
         });
+    }
+
+    const getCurrentFolder = async($folder) => {
+        currentFolder.value = $folder
+
+        console.log($folder);
     }
 
     onMounted(() => {
@@ -51,26 +58,35 @@
                         </span>
 
                         <span v-else v-for="(folder, index) in folders" :key="index">
-                            <li class="nav-item" @click="fetchDataFiles(folder.id)" >
+                            <li class="nav-item" @click="fetchDataFiles(folder.id), getCurrentFolder(folder.folder)" >
                                 <a href="#" class="nav-link align-middle px-0">
                                     <font-awesome-icon icon="folder-open" /> 
                                     <span class="ms-1 d-none d-sm-inline">{{ folder.folder }}</span>
                                 </a>
                             </li>
                         </span>
+
+                        <button type="button" class="btn btn-primary" style="height: 40px; width: 200px;"><font-awesome-icon icon="plus" />  Add Folder</button>
                     </ul>
                     <hr>
                 </div>
             </div>
 
-            <div class="row">
-                <div class="py-3 card-group">
+            <div>
+                <div class=" m-3">
+                    <button type="button" class="btn btn-primary" style="height: 40px; width: 200px;"><font-awesome-icon icon="plus" /> Add File</button>
+                </div>
+                <div class="py-3 card-group" style="overflow-y: scroll;">
+                    
                     <!-- Files List -->
-                    <span v-if="files.length == 0">
-                        <h3>Tidak ada file</h3>
-                    </span>
+                    <center v-if="files.length == 0">
+                        <div class="d-flex justify-content-center">
+                            <center>Tidak ada file pada folder {{ currentFolder }}</center>
+                        </div>
+                    </center>
                     <span v-else v-for="(file, index) in files" :key="index" >
-                        <span class="card m-2" style="width: 200px; height: 200px;">
+                        <span class="card m-2" style="width: 120px;">
+                            <button type="button" class="btn btn-sm btn-danger"><font-awesome-icon icon="trash" /> Hapus</button>
                             <img class="card-img-top" :src="file.file_hash" alt="Image">
                             <div class="card-body bg-secondary">
                                 <p class="card-text text-white" style="font-size: 12px;">{{ file.file }}</p>
