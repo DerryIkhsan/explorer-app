@@ -3,6 +3,7 @@
     import api from '../api';
 
     const folders = ref([]);
+    const subFolders = ref([]);
     const files  = ref([]);
     const currentFolder = ref('');
     const currentFolderId = ref('');
@@ -49,12 +50,12 @@
         isShowModal.value = false
 
     }
+
     function showModalFile() {
         console.log(currentFolderId.value);
 
         isShowModal.value = true
     }
-
 
     const isShowModalFolder = ref(false)
 
@@ -62,8 +63,20 @@
         isShowModalFolder.value = false
 
     }
+
     function showModalFolder() {
         isShowModalFolder.value = true
+    }
+
+    const isShowModalSubFolder = ref(false)
+
+    function closeModalSubFolder() {
+        isShowModalSubFolder.value = false
+
+    }
+
+    function showModalSubFolder() {
+        isShowModalSubFolder.value = true
     }
 
     const handleFileChange = (e) => {
@@ -102,6 +115,35 @@
         });
     }
 
+    const storeSubFolder = async () =>{
+        let formData = new FormData();
+        let folder = document.getElementById("folder").value;
+        
+        formData.append('folder', folder);
+        formData.append('parent_id', currentFolderId.value);
+
+        await api.post('api/subfolders', formData)
+        .then(response => {
+            subFolders.value = response.data.data
+            closeModalSubFolder()
+            fetchDataSubFolder(currentFolderId.value)
+        })
+        .catch((error) => {
+            error.value = error.response.data;
+        });
+    }
+
+    const fetchDataSubFolder = async (id) =>{
+        await api.get('/api/subfolders', {
+            params: {
+                parent_id: id
+            }
+        })
+        .then(response => {
+            subFolders.value = response.data.data
+        });
+    }
+
     const deleteFolder = async(id) => {
         await api.delete(`/api/folders/${id}`)
         .then(response => {
@@ -111,7 +153,6 @@
 
     onMounted(() => {
         fetchDataFolders();
-        console.log(currentFolderId.value);
     });
 
 </script>
@@ -136,7 +177,7 @@
                             </li>
                         </span>
                         <span v-else v-for="(folder, index) in folders" :key="index">
-                            <li class="nav-item" @click="fetchDataFiles(folder.id), getCurrentFolder(folder.folder, folder.id), closeModalFile()" >
+                            <li class="nav-item" @click="fetchDataFiles(folder.id), fetchDataSubFolder(folder.id), getCurrentFolder(folder.folder, folder.id), closeModalFile()" >
                                 <a href="#" class="nav-link align-middle px-0">
                                     <font-awesome-icon icon="folder-open" /> 
                                     <span class="ms-1 d-none d-sm-inline">{{ folder.folder }} </span>
@@ -147,6 +188,7 @@
                             </li>
                         </span>
 
+                        <!-- Form Add Folder -->
                         <form v-if="isShowModalFolder" @submit.prevent="storeFolder()">
                             <input id="folder" name="folder" type="text" class="form-control" placeholder="Nama Folder">
                             <button type="button" class="btn btn-sm btn-warning rounded m-2" @click="closeModalFolder()">Cancel</button>
@@ -166,8 +208,10 @@
                 </h1>
 
                 <div v-if="currentFolderId != '' || currentFolderId != 0" class=" m-3">
-                    <button type="button" class="btn btn-primary" style="height: 40px; width: 200px;" @click="showModalFile()"><font-awesome-icon icon="plus" /> Add File</button>
+                    <button type="button" class="btn btn-primary m-1" style="height: 40px; width: 200px;" @click="showModalFile()"><font-awesome-icon icon="plus" /> Add File</button>
+                    <button type="button" class="btn btn-primary m-1" style="height: 40px; width: 200px;" @click="showModalSubFolder()"><font-awesome-icon icon="plus" /> Add Sub Folder</button>
                 </div>
+
                 <div class="py-3 card-group" style="overflow-y: scroll;">
 
                     <!-- Form Add File -->
@@ -182,6 +226,13 @@
                         <button type="button" class="btn btn-sm btn-warning rounded m-2" @click="closeModalFile()">Cancel</button>
                         <button type="submit" class="btn btn-sm btn-success rounded m-2">Save</button>
                     </form>
+
+                    <!-- Form Add Sub Folder -->
+                    <form v-if="isShowModalSubFolder" @submit.prevent="storeSubFolder()">
+                            <input id="folder" name="folder" type="text" class="form-control" placeholder="Nama Folder">
+                            <button type="button" class="btn btn-sm btn-warning rounded m-2" @click="closeModalSubFolder()">Cancel</button>
+                            <button type="submit" class="btn btn-sm btn-success rounded m-2">Save</button>
+                        </form>
                     
                     <!-- Files List -->
                     <center v-if="files.length == 0 && (currentFolderId != '' || currentFolderId != 0)">
@@ -190,7 +241,6 @@
                         </div>
                     </center>
                     <span v-else v-for="(file, index) in files" :key="index" >
-
                         <span class="card m-2" style="width: 120px;">
                             <button type="button" class="btn btn-sm btn-danger" @click="deleteFile(file.id, file.folder_id)"><font-awesome-icon icon="trash" /> Hapus</button>
                             <img class="card-img-top" :src="file.file_hash" alt="Image">
@@ -198,6 +248,16 @@
                                 <p class="card-text text-white" style="font-size: 12px;">{{ file.file }}</p>
                             </div>
                         </span>
+                    </span>
+
+                    <!-- Sub Folder List -->
+                    <span v-if="subFolders.length > 0" v-for="(subfolder, index) in subFolders" :key="index" >
+                        <a href="#" class="nav-link align-middle px-0 m-1">
+                            <font-awesome-icon icon="folder-open" /> 
+                            <span class="ms-1 d-none d-sm-inline text-dark">{{ subfolder.folder }} </span>
+                            <span style="margin-left: 30px;"></span>
+                            <button type="button"  class="btn btn-sm btn-danger float-end" @click="deleteFolder(subfolder.id)" style="width:30px !important; height: 30px !important;"><font-awesome-icon icon="trash" /></button>
+                        </a>
                     </span>
                 </div>
             </div>
