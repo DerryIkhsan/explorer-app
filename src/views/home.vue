@@ -26,10 +26,26 @@
         });
     }
 
+    const deleteFile = async(id, folder_id) => {
+        await api.delete(`/api/files/${id}`)
+        .then(response => {
+            fetchDataFiles(folder_id);
+        });
+    }
+
     const getCurrentFolder = async($folder) => {
         currentFolder.value = $folder
 
         console.log($folder);
+    }
+
+    const isShowModal = ref(false)
+
+    function closeModal () {
+    isShowModal.value = false
+    }
+    function showModal () {
+    isShowModal.value = true
     }
 
     onMounted(() => {
@@ -77,6 +93,17 @@
                     <button type="button" class="btn btn-primary" style="height: 40px; width: 200px;"><font-awesome-icon icon="plus" /> Add File</button>
                 </div>
                 <div class="py-3 card-group" style="overflow-y: scroll;">
+
+                    <!-- <form>
+                        <div class="mb-3">
+                            <label for="" class="form-label fw-bold">Image</label>
+                            <input type="file" class="form-control">
+                            <div v-if="errors.image" class="alert alert-danger mt-2">
+                                <span> {{ errors.image[0] }}</span>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-md btn-success rounded-sm shadow">Save</button>
+                    </form> -->
                     
                     <!-- Files List -->
                     <center v-if="files.length == 0">
@@ -86,7 +113,7 @@
                     </center>
                     <span v-else v-for="(file, index) in files" :key="index" >
                         <span class="card m-2" style="width: 120px;">
-                            <button type="button" class="btn btn-sm btn-danger"><font-awesome-icon icon="trash" /> Hapus</button>
+                            <button type="button" class="btn btn-sm btn-danger" @click="deleteFile(file.id, file.folder_id)"><font-awesome-icon icon="trash" /> Hapus</button>
                             <img class="card-img-top" :src="file.file_hash" alt="Image">
                             <div class="card-body bg-secondary">
                                 <p class="card-text text-white" style="font-size: 12px;">{{ file.file }}</p>
