@@ -43,11 +43,11 @@
 
     const isShowModal = ref(false)
 
-    function closeModal () {
+    function closeModalFile() {
         isShowModal.value = false
 
     }
-    function showModal () {
+    function showModalFile() {
         isShowModal.value = true
     }
 
@@ -64,7 +64,7 @@
 
         await api.post('api/files', formData)
         .then(() => {
-            closeModal()
+            closeModalFile()
             fetchDataFiles(folder_id)
         })
         .catch((error) => {
@@ -98,7 +98,7 @@
                         </span>
 
                         <span v-else v-for="(folder, index) in folders" :key="index">
-                            <li class="nav-item" @click="fetchDataFiles(folder.id), getCurrentFolder(folder.folder), closeModal()" >
+                            <li class="nav-item" @click="fetchDataFiles(folder.id), getCurrentFolder(folder.folder), closeModalFile()" >
                                 <a href="#" class="nav-link align-middle px-0">
                                     <font-awesome-icon icon="folder-open" /> 
                                     <span class="ms-1 d-none d-sm-inline">{{ folder.folder }}</span>
@@ -114,7 +114,7 @@
 
             <div>
                 <div class=" m-3">
-                    <button type="button" class="btn btn-primary" style="height: 40px; width: 200px;" @click="showModal()"><font-awesome-icon icon="plus" /> Add File</button>
+                    <button type="button" class="btn btn-primary" style="height: 40px; width: 200px;" @click="showModalFile()"><font-awesome-icon icon="plus" /> Add File</button>
                 </div>
                 <div class="py-3 card-group" style="overflow-y: scroll;">
 
@@ -128,18 +128,18 @@
                     </center>
                     <span v-else v-for="(file, index) in files" :key="index" >
                         
-                    <form v-if="isShowModal && index == 0" @submit.prevent="storeFile()">
-                        <input id="folder_id" type="hidden" :value="file.folder_id">
-                        <div class="mb-3">
-                            <label for="" class="form-label">Form Add File</label>
-                            <input type="file" class="form-control" accept="image/png,image/jpeg,image/jpg" @change="handleFileChange($event)">
-                            <div v-if="errors.file" class="alert alert-danger mt-2">
-                                <span> {{ errors.file[0] }}</span>
+                        <form v-if="isShowModal && index == 0" @submit.prevent="storeFile()">
+                            <input id="folder_id" type="hidden" :value="file.folder_id">
+                            <div class="mb-3">
+                                <label for="" class="form-label">Form Add File</label>
+                                <input type="file" class="form-control" accept="image/png,image/jpeg,image/jpg" @change="handleFileChange($event)">
+                                <div v-if="errors.file" class="alert alert-danger mt-2">
+                                    <span> {{ errors.file[0] }}</span>
+                                </div>
                             </div>
-                        </div>
-                        <button type="button" class="btn btn-sm btn-warning rounded m-2" @click="closeModal()">Cancel</button>
-                        <button type="submit" class="btn btn-sm btn-success rounded m-2">Save</button>
-                    </form>
+                            <button type="button" class="btn btn-sm btn-warning rounded m-2" @click="closeModalFile()">Cancel</button>
+                            <button type="submit" class="btn btn-sm btn-success rounded m-2">Save</button>
+                        </form>
 
                         <span class="card m-2" style="width: 120px;">
                             <button type="button" class="btn btn-sm btn-danger" @click="deleteFile(file.id, file.folder_id)"><font-awesome-icon icon="trash" /> Hapus</button>
