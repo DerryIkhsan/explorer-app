@@ -235,7 +235,7 @@
                         </form>
                     
                     <!-- Files List -->
-                    <center v-if="files.length == 0 && (currentFolderId != '' || currentFolderId != 0)">
+                    <center v-if="files.length == 0 && subFolders.length == 0 && (currentFolderId != '' || currentFolderId != 0)">
                         <div class="d-flex justify-content-center">
                             <center>Tidak ada file pada folder {{ currentFolder }}</center>
                         </div>
