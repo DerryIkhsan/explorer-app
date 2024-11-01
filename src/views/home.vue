@@ -5,6 +5,7 @@
     const folders = ref([]);
     const files  = ref([]);
     const currentFolder = ref('');
+    const currentFolderId = ref('');
     const errors = ref([]);
 
     const file = ref('');
@@ -37,8 +38,9 @@
         });
     }
 
-    const getCurrentFolder = async($folder) => {
-        currentFolder.value = $folder
+    const getCurrentFolder = async($folder, $folder_id) => {
+        currentFolder.value = $folder;
+        currentFolderId.value = $folder_id;
     }
 
     const isShowModal = ref(false)
@@ -48,7 +50,20 @@
 
     }
     function showModalFile() {
+        console.log(currentFolderId.value);
+
         isShowModal.value = true
+    }
+
+
+    const isShowModalFolder = ref(false)
+
+    function closeModalFolder() {
+        isShowModalFolder.value = false
+
+    }
+    function showModalFolder() {
+        isShowModalFolder.value = true
     }
 
     const handleFileChange = (e) => {
@@ -57,23 +72,46 @@
 
     const storeFile = async () =>{
         let formData = new FormData();
-        let folder_id = document.getElementById("folder_id").value;
 
         formData.append('file', file.value);
-        formData.append('folder_id', folder_id);
+        formData.append('folder_id', currentFolderId.value);
 
         await api.post('api/files', formData)
         .then(() => {
             closeModalFile()
-            fetchDataFiles(folder_id)
+            fetchDataFiles(currentFolderId.value)
         })
         .catch((error) => {
             error.value = error.response.data;
         });
     }
 
+    const storeFolder = async () =>{
+        let formData = new FormData();
+        let folder = document.getElementById("folder").value;
+
+        formData.append('folder', folder);
+
+        await api.post('api/folders', formData)
+        .then(() => {
+            closeModalFolder()
+            fetchDataFolders()
+        })
+        .catch((error) => {
+            error.value = error.response.data;
+        });
+    }
+
+    const deleteFolder = async(id) => {
+        await api.delete(`/api/folders/${id}`)
+        .then(response => {
+            fetchDataFolders()
+        });
+    }
+
     onMounted(() => {
         fetchDataFolders();
+        console.log(currentFolderId.value);
     });
 
 </script>
@@ -81,6 +119,7 @@
 <template>
     <div class="container-fluid">
         <div class="row flex-nowrap">
+            <!-- Sidebar -->
             <div class="col-auto col-md-3 col-xl-2 px-sm-2 px-0 bg-white">
                 <div class="d-flex flex-column align-items-center align-items-sm-start px-3 pt-2 text-white min-vh-100">
                     <a href="/"
@@ -96,50 +135,61 @@
                                 </a>
                             </li>
                         </span>
-
                         <span v-else v-for="(folder, index) in folders" :key="index">
-                            <li class="nav-item" @click="fetchDataFiles(folder.id), getCurrentFolder(folder.folder), closeModalFile()" >
+                            <li class="nav-item" @click="fetchDataFiles(folder.id), getCurrentFolder(folder.folder, folder.id), closeModalFile()" >
                                 <a href="#" class="nav-link align-middle px-0">
                                     <font-awesome-icon icon="folder-open" /> 
-                                    <span class="ms-1 d-none d-sm-inline">{{ folder.folder }}</span>
+                                    <span class="ms-1 d-none d-sm-inline">{{ folder.folder }} </span>
+                                    <span style="margin-left: 30px;"></span>
+                                    <button type="button"  class="btn btn-sm btn-danger float-end" @click="deleteFolder(folder.id)" style="width:30px !important; height: 30px !important;"><font-awesome-icon icon="trash" /></button>
                                 </a>
+                               
                             </li>
                         </span>
 
-                        <button type="button" class="btn btn-primary" style="height: 40px; width: 200px;"><font-awesome-icon icon="plus" />  Add Folder</button>
+                        <form v-if="isShowModalFolder" @submit.prevent="storeFolder()">
+                            <input id="folder" name="folder" type="text" class="form-control" placeholder="Nama Folder">
+                            <button type="button" class="btn btn-sm btn-warning rounded m-2" @click="closeModalFolder()">Cancel</button>
+                            <button type="submit" class="btn btn-sm btn-success rounded m-2">Save</button>
+                        </form>
+
+                        <button type="button" class="btn btn-primary" style="height: 40px; width: 200px;" @click="showModalFolder()"><font-awesome-icon icon="plus" />  Add Folder</button>
                     </ul>
                     <hr>
                 </div>
             </div>
 
+            <!-- Content -->
             <div>
-                <div class=" m-3">
+                <h1 v-if="currentFolderId == '' || currentFolderId == 0">
+                    Selamat Datang di Explorer App
+                </h1>
+
+                <div v-if="currentFolderId != '' || currentFolderId != 0" class=" m-3">
                     <button type="button" class="btn btn-primary" style="height: 40px; width: 200px;" @click="showModalFile()"><font-awesome-icon icon="plus" /> Add File</button>
                 </div>
                 <div class="py-3 card-group" style="overflow-y: scroll;">
 
-                    
+                    <!-- Form Add File -->
+                    <form v-if="isShowModal" @submit.prevent="storeFile()">
+                        <div class="mb-3">
+                            <label for="" class="form-label">Form Add File</label>
+                            <input type="file" class="form-control" accept="image/png,image/jpeg,image/jpg" @change="handleFileChange($event)">
+                            <div v-if="errors.file" class="alert alert-danger mt-2">
+                                <span> {{ errors.file[0] }}</span>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-warning rounded m-2" @click="closeModalFile()">Cancel</button>
+                        <button type="submit" class="btn btn-sm btn-success rounded m-2">Save</button>
+                    </form>
                     
                     <!-- Files List -->
-                    <center v-if="files.length == 0">
+                    <center v-if="files.length == 0 && (currentFolderId != '' || currentFolderId != 0)">
                         <div class="d-flex justify-content-center">
                             <center>Tidak ada file pada folder {{ currentFolder }}</center>
                         </div>
                     </center>
                     <span v-else v-for="(file, index) in files" :key="index" >
-                        
-                        <form v-if="isShowModal && index == 0" @submit.prevent="storeFile()">
-                            <input id="folder_id" type="hidden" :value="file.folder_id">
-                            <div class="mb-3">
-                                <label for="" class="form-label">Form Add File</label>
-                                <input type="file" class="form-control" accept="image/png,image/jpeg,image/jpg" @change="handleFileChange($event)">
-                                <div v-if="errors.file" class="alert alert-danger mt-2">
-                                    <span> {{ errors.file[0] }}</span>
-                                </div>
-                            </div>
-                            <button type="button" class="btn btn-sm btn-warning rounded m-2" @click="closeModalFile()">Cancel</button>
-                            <button type="submit" class="btn btn-sm btn-success rounded m-2">Save</button>
-                        </form>
 
                         <span class="card m-2" style="width: 120px;">
                             <button type="button" class="btn btn-sm btn-danger" @click="deleteFile(file.id, file.folder_id)"><font-awesome-icon icon="trash" /> Hapus</button>
